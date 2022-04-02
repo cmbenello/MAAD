@@ -1,5 +1,6 @@
 import random
 import pygame
+import math
 pygame.init()
 
 #Create some common colors
@@ -20,19 +21,42 @@ done = False
 
 clock = pygame.time.Clock()
 
-width = 100
+width = 50
 cols = int(size[0] / width)
 rows = int(size[1] / width)
 
 
 stack = []
 
-#Intialise some information about the ball
-ball_size = width / 5
-#xtx create function for generation balls
+#Intialise some information about the balls
 
+ball_size = width/5
+ball_list = [] # A list of all the balls in the form, [ball, speed_x, speed_y]
 
+for i in range(1,360): #A simple thing is just to shoot each ball at a degree
+    ball_i = pygame.Rect(ball_size / 2,ball_size / 2, ball_size, ball_size)
+    ball_list.append([ball_i, 5 * math.cos(i / 2 * math.pi / 180), 
+        5 * math.sin(i / 2* math.pi / 180) ])
 
+def ball_movement():
+    global ball_list
+    for pos,i in enumerate(ball_list):
+        ball = i[0]
+        speed_x = i[1]
+        speed_y = i[2]
+        ball.x += speed_x
+        ball.y += speed_y
+
+        if ball.top <= 0 or ball.bottom >= size[1]:
+            ball_list[pos][2] *= -1
+        if ball.left <= 0 or ball.right >= size[0]:
+            ball_list[pos][1] *= -1
+        
+        #if ball.collideline 
+
+print(ball_list[0][0])
+
+print(ball_list[0][0].colliderect(pygame.Rect(1,1,1,1)))
 class Cell():
     def __init__(self,x,y):
         global width
@@ -58,28 +82,23 @@ class Cell():
         '''if self.current:
             pygame.draw.rect(screen,RED,(self.x,self.y,width,width))'''
         if self.walls[0]:
-            pygame.draw.line(screen,BLACK,(self.x,self.y),((self.x + width),self.y),1) # top
+            pygame.draw.line(screen,WHITE,(self.x,self.y),((self.x + width),self.y),1) # top
         if self.walls[1]:
-            pygame.draw.line(screen,BLACK,((self.x + width),self.y),((self.x + width),(self.y + width)),1) # right
+            pygame.draw.line(screen,WHITE,((self.x + width),self.y),((self.x + width),(self.y + width)),1) # right
         if self.walls[2]:
-            pygame.draw.line(screen,BLACK,((self.x + width),(self.y + width)),(self.x,(self.y + width)),1) # bottom
+            pygame.draw.line(screen,WHITE,((self.x + width),(self.y + width)),(self.x,(self.y + width)),1) # bottom
         if self.walls[3]:
-            pygame.draw.line(screen,BLACK,(self.x,(self.y + width)),(self.x,self.y),1) # left
+            pygame.draw.line(screen,WHITE,(self.x,(self.y + width)),(self.x,self.y),1) # left
     
     def checkNeighbors(self):
-        #print("Top; y: " + str(int(self.y / width)) + ", y - 1: " + str(int(self.y / width) - 1))
         if int(self.y / width) - 1 >= 0:
             self.top = grid[int(self.y / width) - 1][int(self.x / width)]
-        #print("Right; x: " + str(int(self.x / width)) + ", x + 1: " + str(int(self.x / width) + 1))
         if int(self.x / width) + 1 <= cols - 1:
             self.right = grid[int(self.y / width)][int(self.x / width) + 1]
-        #print("Bottom; y: " + str(int(self.y / width)) + ", y + 1: " + str(int(self.y / width) + 1))
         if int(self.y / width) + 1 <= rows - 1:
             self.bottom = grid[int(self.y / width) + 1][int(self.x / width)]
-        #print("Left; x: " + str(int(self.x / width)) + ", x - 1: " + str(int(self.x / width) - 1))
         if int(self.x / width) - 1 >= 0:
             self.left = grid[int(self.y / width)][int(self.x / width) - 1]
-        #print("--------------------")
         
         if self.top != 0:
             if self.top.visited == False:
@@ -116,15 +135,6 @@ def removeWalls(current_cell,next_cell):
         current_cell.walls[0] = False
         next_cell.walls[2] = False
 
-def ball_movement(ball,speed_x,speed_y):
-    ball.x += ball_speed_x
-    ball.y += ball_speed_y
-
-
-    if ball.top <= 0 or ball.bottom >= size[1]:
-        ball_speed_y *= -1
-    if ball.left <= 0 or ball.right >= size[0]:
-        ball_speed_x *= -1
 
 grid = []
 
@@ -136,7 +146,6 @@ for y in range(rows):
 current_cell = grid[0][0]
 next_cell = 0
 
-print(grid[0][1].x, grid[0][1].y)
 # -------- Main Program Loop -----------
 while not done:
     # --- Main event loop
@@ -144,7 +153,6 @@ while not done:
         if event.type == pygame.QUIT:
             done = True
     
-    screen.fill(GREY)
     
     current_cell.visited = True
     current_cell.current = True
@@ -152,7 +160,7 @@ while not done:
 
     
     next_cell = current_cell.checkNeighbors()
-    screen.fill(WHITE)
+    screen.fill(BLACK)
     if next_cell != False:
         current_cell.neighbors = []
         
@@ -174,9 +182,10 @@ while not done:
         for y in range(rows):
             for x in range(cols):
                 grid[y][x].draw()
-        ball = pygame.Rect(ball_size / 2,ball_size / 2, ball_size, ball_size)
-        pygame.draw.ellipse(screen, RED, ball)
-        print(ball.x,ball.y)
+
+        ball_movement()
+        for ball in ball_list:
+            pygame.draw.ellipse(screen, RED, ball[0])
         #xtx create function that navigates the ball
 
     pygame.display.flip()
