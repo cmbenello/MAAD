@@ -123,7 +123,7 @@ def ball_movement(ball,speed_x,speed_y):
 
     if ball.top <= 0 or ball.bottom >= size[1]:
         ball_speed_y *= -1
-    if ball.left <= 0 or ball.right >= side[0]:
+    if ball.left <= 0 or ball.right >= size[0]:
         ball_speed_x *= -1
 
 grid = []
