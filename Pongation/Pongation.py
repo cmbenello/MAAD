@@ -11,10 +11,14 @@ BLACK = (0,0,0)
 PURPLE = (100,0,100)
 RED = (255,0,0)
 BLUE = (0,0,255)
+Wall_Color = WHITE
+Ball_Color = Wall_Color
+Background_Color = PURPLE
 
 
 #Set up the Screen
-size = (1000,800)
+size = (1512,982) #Mac screen size
+#size = (1000, 800)
 screen = pygame.display.set_mode(size)
 
 pygame.display.set_caption("Pongation")
@@ -24,13 +28,14 @@ maze_completed = False
 
 clock = pygame.time.Clock()
 
-width = 100
+width = 75
 shift = 1 #The area of either side that is empty
 cols = int(size[0] / width - 2 * shift)
 rows = int(size[1] / width - 2 * shift)
 
 
-girth = 3 #Thickness of the llines
+girth = 5 #Thickness of the llines
+length = width + girth / 2
 walls_list = [[],[]] #Horizontal walls, vertial walls
 
 stack = []
@@ -39,9 +44,9 @@ stack = []
 
 ball_size = width/5
 ball_list = [] # A list of all the balls in the form, [ball, speed_x, speed_y]
-ball_speed = 10
+ball_speed = 15
 number_of_balls = 100
-spawn_points = 3
+spawn_points = 5
 
 for i in range(number_of_balls): #A simple thing is just to shoot each ball at a degree
     for x in range(spawn_points):
@@ -49,8 +54,8 @@ for i in range(number_of_balls): #A simple thing is just to shoot each ball at a
             ball_i = pygame.Rect(x * width / spawn_points,
                 y * width / spawn_points, ball_size, ball_size)
             ball_list.append([ball_i, 
-                ball_speed * math.cos(i * (180 / number_of_balls) * math.pi / 180), 
-                ball_speed * math.sin(i * (180 / number_of_balls) * math.pi / 180) ])
+                ball_speed * math.cos(i * (360 / number_of_balls) * math.pi / 180), 
+                ball_speed * math.sin(i * (360 / number_of_balls) * math.pi / 180) ])
 
 def ball_movement():
     global ball_list,grid
@@ -92,13 +97,13 @@ class Cell():
         '''if self.current:
             pygame.draw.rect(screen,RED,(self.x,self.y,width,width))'''
         if self.walls[0]:
-            pygame.draw.line(screen,WHITE,(self.x,self.y),((self.x + width),self.y),5) # top
+            pygame.draw.line(screen,Wall_Color,(self.x,self.y),((self.x + width),self.y),girth) # top
         if self.walls[1]:
-            pygame.draw.line(screen,WHITE,((self.x + width),self.y),((self.x + width),(self.y + width)),5) # right
-        if self.walls[2]:
-            pygame.draw.line(screen,WHITE,((self.x + width),(self.y + width)),(self.x,(self.y + width)),5) # bottom
+            pygame.draw.line(screen,Wall_Color,((self.x + width),self.y),((self.x + width),(self.y + width)),girth) # right
+        if self.walls[2] and not (self.x == (cols- 1) * width and self.y == (rows - 1) * width):
+            pygame.draw.line(screen,Wall_Color,((self.x + width),(self.y + width)),(self.x,(self.y + width)),girth) # bottom
         if self.walls[3]:
-            pygame.draw.line(screen,WHITE,(self.x,(self.y + width)),(self.x,self.y),5) # left
+            pygame.draw.line(screen,Wall_Color,(self.x,(self.y + width)),(self.x,self.y),girth) # left
     
     def rect_list(self):
         global walls_list
@@ -106,13 +111,13 @@ class Cell():
             walls_list[0].append(pygame.Rect(self.x, self.y,width,girth)) #top
         if self.walls[1]:
             walls_list[1].append(pygame.Rect(self.x + width, self.y, girth, width)) #right
-        if self.walls[2]:
+        if self.walls[2] and not (self.x == (cols- 1) * width and self.y == (rows - 1) * width):
             walls_list[0].append(pygame.Rect(self.x, self.y +  width, width, girth)) #bottom
         if self.walls[3]:
             walls_list[1].append(pygame.Rect(self.x,self.y, girth, width)) #left
     
     def checkNeighbors(self):
-        if int(self.y - shift/ width) - 1 >= 0:
+        if int(self.y / width) - 1 >= 0:
             self.top = grid[int(self.y / width) - 1][int(self.x / width)]
         if int(self.x / width) + 1 <= cols - 1:
             self.right = grid[int(self.y / width)][int(self.x / width) + 1]
@@ -174,12 +179,12 @@ while not done:
         if event.type == pygame.QUIT:
             done = True
 
-    screen.fill(BLACK)
+    screen.fill(Background_Color)
     for y in range(rows):
         for x in range(cols):
             grid[y][x].draw()
 
-    while not maze_completed: # change to if, if you want to see maze making process
+    if not maze_completed: # while for fast, if for animation
         current_cell.visited = True
         current_cell.current = True
 
@@ -204,22 +209,22 @@ while not done:
         elif len(stack) == 0: #Finished creating the maze
             for y in range(rows):
                 for x in range(cols):
-                    #grid[y][x].draw()
                     grid[y][x].rect_list()
             maze_completed = True
 
     else:
+        grid[-1][-1].draw()
         #for i in walls_list:
         #   for wall in i:
         #        pygame.draw.rect(screen, RED, wall)      
         ball_movement()
         for ball in ball_list:
-            pygame.draw.ellipse(screen, WHITE, ball[0])
+            pygame.draw.ellipse(screen, Ball_Color, ball[0])
         #xtx create function that navigates the ball
 
     pygame.display.flip()
     
-    clock.tick(100000000)
+    clock.tick(1000)
 
 
 pygame.quit()
