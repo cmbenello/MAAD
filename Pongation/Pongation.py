@@ -40,6 +40,7 @@ walls_list = [[],[]] #Horizontal walls, vertial walls
 
 stack = []
 
+
 #Intialise some information about the balls
 
 ball_size = width/5
