@@ -1,4 +1,5 @@
 import random
+from tkinter import HORIZONTAL
 import pygame
 import math
 pygame.init()
@@ -9,25 +10,28 @@ GREY = (20,20,20)
 BLACK = (0,0,0)
 PURPLE = (100,0,100)
 RED = (255,0,0)
+BLUE = (0,0,255)
 
 
 #Set up the Screen
-size = (800,800)
+size = (1000,800)
 screen = pygame.display.set_mode(size)
 
 pygame.display.set_caption("Pongation")
 
 done = False
+maze_completed = False 
 
 clock = pygame.time.Clock()
 
 width = 100
-cols = int(size[0] / width)
-rows = int(size[1] / width)
+shift = 1 #The area of either side that is empty
+cols = int(size[0] / width - 2 * shift)
+rows = int(size[1] / width - 2 * shift)
 
 
-girth = 2 #Thickness of the llines
-walls_list = []
+girth = 3 #Thickness of the llines
+walls_list = [[],[]] #Horizontal walls, vertial walls
 
 stack = []
 
@@ -35,14 +39,18 @@ stack = []
 
 ball_size = width/5
 ball_list = [] # A list of all the balls in the form, [ball, speed_x, speed_y]
-ball_speed = 4
-number_of_balls = 5
+ball_speed = 10
+number_of_balls = 100
+spawn_points = 3
 
-for i in range(1,number_of_balls): #A simple thing is just to shoot each ball at a degree
-    ball_i = pygame.Rect(ball_size / 2,ball_size / 2, ball_size, ball_size)
-    ball_list.append([ball_i, 
-        ball_speed * math.cos(i * (180 / number_of_balls) * math.pi / 180), 
-        ball_speed * math.sin(i * (180 / number_of_balls) * math.pi / 180) ])
+for i in range(number_of_balls): #A simple thing is just to shoot each ball at a degree
+    for x in range(spawn_points):
+        for y in range(spawn_points):
+            ball_i = pygame.Rect(x * width / spawn_points,
+                y * width / spawn_points, ball_size, ball_size)
+            ball_list.append([ball_i, 
+                ball_speed * math.cos(i * (180 / number_of_balls) * math.pi / 180), 
+                ball_speed * math.sin(i * (180 / number_of_balls) * math.pi / 180) ])
 
 def ball_movement():
     global ball_list,grid
@@ -52,24 +60,18 @@ def ball_movement():
         speed_y = i[2]
         ball.x += speed_x
         ball.y += speed_y
-        if ball.top <= 0 or ball.bottom >= size[1]:
-            ball_list[pos][2] *= -1
-        if ball.left <= 0 or ball.right >= size[0]:
-            ball_list[pos][1] *= -1
 
-        #This technique is wrong becuase you could intersect 
-        if ball.collidelist(walls_list) != -1:
-            if abs (ball.x % width) == 0:
-                ball_list[pos][1] *= -1
-            if abs (ball.y % width) == 0:
-                ball_list[pos][1] *= -1
+        if ball.collidelist(walls_list[0]) != -1:
+            ball_list[pos][2] *= -1
+        if ball.collidelist(walls_list[1]) != -1:
+            ball_list[pos][1] *= -1
 
 
 class Cell():
     def __init__(self,x,y):
         global width
-        self.x = x * width
-        self.y = y * width
+        self.x =  x * width
+        self.y =  y * width
         
         self.visited = False
         self.current = False
@@ -101,16 +103,16 @@ class Cell():
     def rect_list(self):
         global walls_list
         if self.walls[0]:
-            walls_list.append(pygame.Rect(self.x, self.y,width,girth)) #top
-        #if self.walls[1]:
-         #   walls_list.append(pygame.Rect(self.x + width, self.y, girth, width)) #right
-        #if self.walls[2]:
-            #walls_list.append(pygame.Rect(self.x, self.y -  width, width, girth)) #bottom
+            walls_list[0].append(pygame.Rect(self.x, self.y,width,girth)) #top
+        if self.walls[1]:
+            walls_list[1].append(pygame.Rect(self.x + width, self.y, girth, width)) #right
+        if self.walls[2]:
+            walls_list[0].append(pygame.Rect(self.x, self.y +  width, width, girth)) #bottom
         if self.walls[3]:
-            walls_list.append(pygame.Rect(self.x,self.y, girth, width)) #left
+            walls_list[1].append(pygame.Rect(self.x,self.y, girth, width)) #left
     
     def checkNeighbors(self):
-        if int(self.y / width) - 1 >= 0:
+        if int(self.y - shift/ width) - 1 >= 0:
             self.top = grid[int(self.y / width) - 1][int(self.x / width)]
         if int(self.x / width) + 1 <= cols - 1:
             self.right = grid[int(self.y / width)][int(self.x / width) + 1]
@@ -171,40 +173,45 @@ while not done:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             done = True
-    
-    
-    current_cell.visited = True
-    current_cell.current = True
-    
 
-    
-    next_cell = current_cell.checkNeighbors()
     screen.fill(BLACK)
-    if next_cell != False:
-        current_cell.neighbors = []
-        
-        stack.append(current_cell)
-        
-        removeWalls(current_cell,next_cell)
-        
-        current_cell.current = False
-        
-        current_cell = next_cell
-    
-    elif len(stack) > 0:
-        current_cell.current = False
-        current_cell = stack.pop()
-    
+    for y in range(rows):
+        for x in range(cols):
+            grid[y][x].draw()
 
-    
-    elif len(stack) == 0: #Finished creating the maze
-        for y in range(rows):
-            for x in range(cols):
-                grid[y][x].draw()
-                grid[y][x].rect_list()
-        for i in walls_list:
-            pygame.draw.rect(screen, RED, i )
+    while not maze_completed: # change to if, if you want to see maze making process
+        current_cell.visited = True
+        current_cell.current = True
 
+
+
+        next_cell = current_cell.checkNeighbors()
+        if next_cell != False:
+            current_cell.neighbors = []
+            
+            stack.append(current_cell)
+            
+            removeWalls(current_cell,next_cell)
+            
+            current_cell.current = False
+            
+            current_cell = next_cell
+
+        elif len(stack) > 0:
+            current_cell.current = False
+            current_cell = stack.pop()
+
+        elif len(stack) == 0: #Finished creating the maze
+            for y in range(rows):
+                for x in range(cols):
+                    #grid[y][x].draw()
+                    grid[y][x].rect_list()
+            maze_completed = True
+
+    else:
+        #for i in walls_list:
+        #   for wall in i:
+        #        pygame.draw.rect(screen, RED, wall)      
         ball_movement()
         for ball in ball_list:
             pygame.draw.ellipse(screen, WHITE, ball[0])
@@ -212,7 +219,7 @@ while not done:
 
     pygame.display.flip()
     
-    clock.tick(1000)
+    clock.tick(100000000)
 
 
 pygame.quit()
