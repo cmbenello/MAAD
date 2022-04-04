@@ -29,9 +29,9 @@ maze_completed = False
 clock = pygame.time.Clock()
 
 width = 75
-shift = 1 #The area of either side that is empty
-cols = int(size[0] / width - 2 * shift)
-rows = int(size[1] / width - 2 * shift)
+shift = 1 #The area of the side that is empty
+cols = int(size[0] / width - shift)
+rows = int(size[1] / width - shift)
 
 
 girth = 5 #Thickness of the llines
@@ -50,6 +50,7 @@ number_of_balls = 360 #Number of balls at each spawn point
 spawn_points = 3
 escaped_counter = 0  # Number of balls that have escaped
 first_escaped = 0
+first_distance = 0
 
 for i in range(number_of_balls): #A simple thing is just to shoot each ball at a degree
     for x in range(1, spawn_points + 1):
@@ -67,7 +68,7 @@ for i in range(number_of_balls): #A simple thing is just to shoot each ball at a
                      0])
     
 def ball_movement():
-    global ball_list,grid, escaped_counter
+    global ball_list,grid, escaped_counter, first_escaped,first_distance
     for pos,i in enumerate(ball_list):
         ball = i[0]
         speed_x = i[1]
@@ -78,9 +79,9 @@ def ball_movement():
         
         if ball.x > size[0] or ball.y > size[1]:
             escaped_counter += 1
-            del ball_list[pos]
-            print(escaped_counter,ball_list[pos][6])
-            first_escaped = pos
+            if not first_escaped:
+                first_escaped = pos
+                first_distance = ball_list[first_escaped][6]
         if ball.collidelist(walls_list[0]) != -1 and not ball_list[pos][3]:
             ball_list[pos][2] *= -1
             ball_list[pos][3] = True
@@ -91,6 +92,10 @@ def ball_movement():
             ball_list[pos][4] = True
         else:
             ball_list[pos][4] = False
+
+def ball_movement2():
+    global ball_list, grid, first_escaped
+    ball = ball_list[first_escaped]
         
         
 
@@ -238,13 +243,16 @@ while not done:
 
     else:
         font = pygame.font.SysFont('gabriola', 50)
-        textsurface = font.render('Balls Escaped: ' + str(escaped_counter), False, Wall_Color)
-        screen.blit(textsurface,(width,(rows + 0.5) * width ))
-            
-        ball_movement()
+        escaped_text = font.render('Balls Escaped: ' + str(escaped_counter), False, Wall_Color)
+        screen.blit(escaped_text,(width,(rows + 0.5) * width))
+        if first_escaped:
+            distance_text = font.render('Shortest distance travelled: ' + \
+                str(int(first_distance)), False, Wall_Color)
+            screen.blit(distance_text,(width,(rows + 1) * width))
+        if not first_escaped:    
+            ball_movement()
         for ball in ball_list:
             pygame.draw.ellipse(screen, Ball_Color, ball[0])
-        #xtx create function that navigates the ball
 
     pygame.display.flip()
     
