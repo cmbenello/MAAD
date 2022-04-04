@@ -13,12 +13,12 @@ RED = (255,0,0)
 BLUE = (0,0,255)
 Wall_Color = WHITE
 Ball_Color = Wall_Color
-Background_Color = PURPLE
+Background_Color = BLACK
 
 
 #Set up the Screen
-size = (1512,982) #Mac screen size
-#size = (1000, 800)
+#size = (1512,982) #Mac screen size
+size = (1000, 800)
 screen = pygame.display.set_mode(size)
 
 pygame.display.set_caption("Pongation")
@@ -43,34 +43,57 @@ stack = []
 
 #Intialise some information about the balls
 
-ball_size = width/5
-ball_list = [] # A list of all the balls in the form, [ball, speed_x, speed_y]
+ball_size = width/4
+ball_list = [] # A list of all the balls in the form, [ball, speed_x, speed_y, last_hit_x, last_hit_y,[angle, position], distance]
 ball_speed = 15
-number_of_balls = 100
-spawn_points = 5
+number_of_balls = 360 #Number of balls at each spawn point
+spawn_points = 3
+escaped_counter = 0  # Number of balls that have escaped
+first_escaped = 0
 
 for i in range(number_of_balls): #A simple thing is just to shoot each ball at a degree
-    for x in range(spawn_points):
-        for y in range(spawn_points):
-            ball_i = pygame.Rect(x * width / spawn_points,
-                y * width / spawn_points, ball_size, ball_size)
-            ball_list.append([ball_i, 
-                ball_speed * math.cos(i * (360 / number_of_balls) * math.pi / 180), 
-                ball_speed * math.sin(i * (360 / number_of_balls) * math.pi / 180) ])
-
+    for x in range(1, spawn_points + 1):
+        for y in range(1, spawn_points + 1):
+            ball_i = pygame.Rect(x * width / (2 * spawn_points),
+                y * width / (2 * spawn_points), ball_size, ball_size)
+            angle = 2 * i * math.pi / number_of_balls 
+            if angle % 0.5 != 0.0:
+                ball_list.append([ball_i, 
+                    ball_speed * math.cos(angle), 
+                    ball_speed * math.sin(angle),
+                    False, False,
+                    [x * width / (2 * spawn_points),
+                    y * width / (2 * spawn_points), angle],
+                     0])
+    
 def ball_movement():
-    global ball_list,grid
+    global ball_list,grid, escaped_counter
     for pos,i in enumerate(ball_list):
         ball = i[0]
         speed_x = i[1]
         speed_y = i[2]
         ball.x += speed_x
         ball.y += speed_y
-
-        if ball.collidelist(walls_list[0]) != -1:
+        ball_list[pos][6] += ball_speed * math.sqrt(2)
+        
+        if ball.x > size[0] or ball.y > size[1]:
+            escaped_counter += 1
+            del ball_list[pos]
+            print(escaped_counter,ball_list[pos][6])
+            first_escaped = pos
+        if ball.collidelist(walls_list[0]) != -1 and not ball_list[pos][3]:
             ball_list[pos][2] *= -1
-        if ball.collidelist(walls_list[1]) != -1:
+            ball_list[pos][3] = True
+        else:
+            ball_list[pos][3] = False
+        if ball.collidelist(walls_list[1]) != -1 and not ball_list[pos][4]:
             ball_list[pos][1] *= -1
+            ball_list[pos][4] = True
+        else:
+            ball_list[pos][4] = False
+        
+        
+
 
 
 class Cell():
@@ -185,7 +208,7 @@ while not done:
         for x in range(cols):
             grid[y][x].draw()
 
-    if not maze_completed: # while for fast, if for animation
+    while not maze_completed: # while for fast, if for animation
         current_cell.visited = True
         current_cell.current = True
 
@@ -214,10 +237,10 @@ while not done:
             maze_completed = True
 
     else:
-        grid[-1][-1].draw()
-        #for i in walls_list:
-        #   for wall in i:
-        #        pygame.draw.rect(screen, RED, wall)      
+        font = pygame.font.SysFont('gabriola', 50)
+        textsurface = font.render('Balls Escaped: ' + str(escaped_counter), False, Wall_Color)
+        screen.blit(textsurface,(width,(rows + 0.5) * width ))
+            
         ball_movement()
         for ball in ball_list:
             pygame.draw.ellipse(screen, Ball_Color, ball[0])
