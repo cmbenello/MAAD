@@ -17,8 +17,8 @@ Background_Color = BLACK
 
 
 #Set up the Screen
-#size = (1512,982) #Mac screen size
-size = (1000, 800)
+size = (1512,982) #Mac screen size
+#size = (1000, 800)
 screen = pygame.display.set_mode(size)
 
 pygame.display.set_caption("Pongation")
