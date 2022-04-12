@@ -3,7 +3,7 @@ import numpy as np
 import random
 
 # Create a VideoCapture object and read from input file
-combination_list = [['eren','doggy'],['imposter','winky'],['licky','whirl']]
+combination_list = [['eren','doggy'],['imposter','winky'],['licky','whirl'],['truck','mcnd']]
 
 choice = random.randint(0,len(combination_list))
 video1 = 'Gifs/' + combination_list[choice][0] + '.gif'
@@ -12,9 +12,11 @@ title = combination_list[choice][0] + " + " + combination_list[choice][1]
 cap = cv2.VideoCapture(video1)
 cap2 = cv2.VideoCapture(video2)
 frame = cap.read()[1]
+frame2 = cap2.read()[1]
 
 width, height = len(frame[0]), len(frame)
-size_act = (width, height)
+width2, height2 = len(frame2[0]), len(frame2)
+
 size_full = (3224,1964)
 
 # Check if camera opened successfully
@@ -29,7 +31,7 @@ while(cap.isOpened()):
 
   if ret == True and ret2 == True:
 
-    parity = random.randint(1,4)
+    parity = random.randint(1,5)
     # Display the resulting frame
     for x in range(len(frame)):
         for y in range(len(frame[0])):
