@@ -3,10 +3,9 @@ import numpy as np
 import random
 
 # Create a VideoCapture object and read from input file
-# If the input is the camera, pass 0 instead of the video file name
 combination_list = [['eren','doggy'],['imposter','winky'],['licky','whirl']]
 
-choice = 2
+choice = random.randint(0,len(combination_list))
 video1 = 'Gifs/' + combination_list[choice][0] + '.gif'
 video2 = 'Gifs/' + combination_list[choice][1] + '.gif'
 title = combination_list[choice][0] + " + " + combination_list[choice][1]
@@ -30,7 +29,7 @@ while(cap.isOpened()):
 
   if ret == True and ret2 == True:
 
-    parity = random.randint(1,6)
+    parity = random.randint(1,4)
     # Display the resulting frame
     for x in range(len(frame)):
         for y in range(len(frame[0])):
